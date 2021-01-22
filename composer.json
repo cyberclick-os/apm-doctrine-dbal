@@ -1,5 +1,5 @@
 {
-  "name": "pccomponentes/apm-doctrine-dbal",
+  "name": "cyberclick/apm-doctrine-dbal",
   "description": "Elastic APM for Doctrine DBAL",
   "license": "MIT",
   "type": "library",
