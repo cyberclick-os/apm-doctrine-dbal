@@ -1,5 +1,5 @@
 {
-  "name": "cyberclick/apm-doctrine-dbal",
+  "name": "cyberclick-os/apm-doctrine-dbal",
   "description": "Elastic APM for Doctrine DBAL",
   "license": "MIT",
   "type": "library",
@@ -15,8 +15,8 @@
     }
   },
   "require": {
-    "php": "^7.4 | ^8.0",
-    "doctrine/dbal": "^2.10",
+    "php": "^7.4 || ^8.0",
+    "doctrine/dbal": "^2.10 || ^3.0",
     "zoilomora/elastic-apm-agent-php": "^0.1",
     "aaronidas/apm-sql-lexer": "^0.0"
   },
