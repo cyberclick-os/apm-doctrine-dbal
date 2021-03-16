@@ -19,11 +19,16 @@ final class SQLLogger implements SQLLoggerBase
         '"ROLLBACK TO SAVEPOINT"',
     ];
 
-    private const SPAN_NAME = 'DB Query';
-    private const SPAN_TYPE = 'DB';
-    private const SPAN_ACTION = 'query';
+    private const EXCLUDED_SENTENCES = [
+
+    ];
+
+    private const SPAN_NAME       = 'DB Query';
+    private const SPAN_TYPE       = 'DB';
+    private const SPAN_ACTION     = 'query';
     private const CONTEXT_DB_TYPE = 'sql';
     private const STACKTRACE_SKIP = 3;
+    private const MAX_PARAMS      = 200;
 
     private ElasticApmTracer $elasticApmTracer;
     private string $instance;
@@ -37,12 +42,13 @@ final class SQLLogger implements SQLLoggerBase
         string $instance,
         string $engine,
         bool $debugMode = false
-    ) {
+    )
+    {
         $this->elasticApmTracer = $elasticApmTracer;
-        $this->instance = $instance;
-        $this->engine = $engine;
-        $this->debugMode = $debugMode;
-        $this->span = null;
+        $this->instance         = $instance;
+        $this->engine           = $engine;
+        $this->debugMode        = $debugMode;
+        $this->span             = null;
     }
 
     public function startQuery($sql, ?array $params = null, ?array $types = null)
@@ -55,6 +61,19 @@ final class SQLLogger implements SQLLoggerBase
             $this->span = null;
 
             return;
+        }
+
+        if (strpos($sql, 'IN (?)') !== false) {
+            $countParams = 0;
+            foreach ($params as $param) {
+                if (is_countable($param)) {
+                    $countParams = $countParams + count($param);
+                }
+                if ($countParams > self::MAX_PARAMS) {
+                    $this->span = null;
+                    return;
+                }
+            }
         }
 
         $spanName = Signature::parse($sql);
@@ -73,15 +92,6 @@ final class SQLLogger implements SQLLoggerBase
         }
     }
 
-    public function stopQuery()
-    {
-        if (null === $this->span) {
-            return;
-        }
-
-        $this->span->stop();
-    }
-
     private function getContext($sql, ?array $params, ?array $types): Context
     {
         return Context::fromDb(
@@ -92,5 +102,14 @@ final class SQLLogger implements SQLLoggerBase
                 self::CONTEXT_DB_TYPE,
             ),
         );
+    }
+
+    public function stopQuery()
+    {
+        if (null === $this->span) {
+            return;
+        }
+
+        $this->span->stop();
     }
 }
